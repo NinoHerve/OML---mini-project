@@ -32,8 +32,8 @@ for epoch in range(20):
 
 #### Who ? (13 candidates + 2 operators)
 - [`LambdaLR`](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.LambdaLR.html#torch.optim.lr_scheduler.LambdaLR): Multiply initial `lr` by a given function.
-	-> `optimizer`
-	-> `lr_lambda`: Function taking `epoch` and returning a float.
+	- `optimizer`
+	- `lr_lambda`: Function taking `epoch` and returning a float.
 	
 - [`MultiplicativeLR`](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.MultiplicativeLR.html#torch.optim.lr_scheduler.MultiplicativeLR): Multiply current `lr` by a given function.
 	-> `optimizer`
