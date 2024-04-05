@@ -21,4 +21,7 @@ one classic scheduler for each category. I will add some additional suggestions 
    - One Cycle (cyclic scheduler that only has one cycle, so we start with low learning rate, it increases, and decreases again)
    - Step scheduler (decay at every step-size)
   
--
+## Building our own scheduler
+We can use the scheduler `LambdaLR` or `MultiplicativeLR` to build our own schedulers. Both schedulers take as input a function. The latter must be function of the current number of epochs. At each step `LambdaR` will multiply the output of the function by the initial learning rate while `MultiplicativeLR` will multiply the output of the function by the current learning rate.
+
+The generalized function for damped oscillators $$e^{-ax}[b_1\cos(c_1x) + b_2cos(c_2x)]$$allows us to generate decreasing linear functions, decreasing exponentials, oscillations, damped oscillations englobing all the schedulers above. However, work is needed to range the parameters $a$, $b_1$, $b_2$, $c_1$, $c_2$ such that the generated schedulers don't go "out of hand".
