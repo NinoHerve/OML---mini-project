@@ -11,4 +11,4 @@ one classic scheduler for each category. I will add some additional suggestions 
 1. Main focus:
    - Exponential decay every N (~10) epochs with gamma = 0.1
    - Exponential decay on plateau with gamma = 0.1
-   - Cyclic 
+   - Cyclic with triangular mode. Select parameters as in [paper]()
