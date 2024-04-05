@@ -1,5 +1,5 @@
 
-#### Schedulers by importance
+## Schedulers by importance
 There are 4 categories of schedulers (to my opinion):
 - schedulers that decrease the learning rate over the epochs
 - schedulers that decrease the learning rate when the validation score stagnates
