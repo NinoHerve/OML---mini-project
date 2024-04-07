@@ -6,6 +6,8 @@ from transformers import AutoTokenizer, DataCollatorWithPadding, AutoModelForSeq
 
 class SATask:
   def __init__(self, model_name):
+    self.fine_tunning_task = "sa"
+    self.model_name = model_name
     self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     self.data_collator = DataCollatorWithPadding(self.tokenizer)
     self.dataset, self.encoded_dataset = self.get_sst2_dataset(self.tokenizer)

@@ -3,6 +3,8 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, default_d
 
 class SQuADTask:
   def __init__(self, model_name):
+    self.fine_tunning_task = "qa"
+    self.model_name = model_name
     self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     self.data_collator = default_data_collator
     self.dataset, self.encoded_dataset = self.get_squad_dataset(self.tokenizer)

@@ -6,6 +6,8 @@ from transformers import AutoTokenizer, DataCollatorWithPadding, AutoModelForSeq
 
 class MNLITask:
   def __init__(self, model_name):
+    self.fine_tunning_task = "nli"
+    self.model_name = model_name
     self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     self.data_collator = DataCollatorWithPadding(self.tokenizer)
     self.dataset, self.encoded_dataset = self.get_nli_dataset(self.tokenizer)

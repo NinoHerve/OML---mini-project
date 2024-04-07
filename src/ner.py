@@ -5,6 +5,8 @@ from transformers import AutoTokenizer, DataCollatorForTokenClassification, Auto
 
 class NERTask:
   def __init__(self, model_name):
+    self.fine_tunning_task = "ner"
+    self.model_name = model_name
     self.tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True)
     self.data_collator = DataCollatorForTokenClassification(self.tokenizer)
     self.dataset, self.encoded_dataset = self.get_ner_dataset(self.tokenizer)
