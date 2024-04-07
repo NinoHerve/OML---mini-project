@@ -1,63 +1,21 @@
 from datasets import load_dataset
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering, default_data_collator
 
-
-def get_sst2_dataset(tokenizer):
-    dataset = load_dataset("glue", "sst2")
-    encoded_dataset = dataset.map(lambda sample: tokenizer(sample["sentence"], truncation=True), batched=True)
-    return dataset, encoded_dataset
-
-def get_nli_dataset(tokenizer):
-    dataset = load_dataset("glue", "mnli")
-    dataset["validation"], dataset["test"] = dataset.pop("validation_matched"), dataset.pop("test_matched")
-    dataset.pop("validation_mismatched")
-    dataset.pop("test_mismatched")
-    encoded_dataset = dataset.map(lambda sample: tokenizer(sample["premise"], sample["hypothesis"], truncation=True), batched=True)
-    return dataset, encoded_dataset
-
-def get_ner_dataset(tokenizer):
-    dataset = load_dataset("conll2003")
-    encoded_dataset = dataset.map(lambda sample: tokenize_and_align_labels(tokenizer, sample), batched=True)
-    return dataset, encoded_dataset
-
-def get_squad_dataset(tokenizer):
+class SQuADTask:
+  def __init__(self, model_name):
+    self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+    self.data_collator = default_data_collator
+    self.dataset, self.encoded_dataset = self.get_squad_dataset(self.tokenizer)
+    self.model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+  
+  def get_squad_dataset(self, tokenizer):
     dataset = load_dataset("squad")
-    encoded_dataset = dataset.map(lambda sample: preprocess_squad_dataset(tokenizer, sample), batched=True, remove_columns=dataset["train"].column_names)
+    encoded_dataset = dataset.map(lambda sample: self.preprocess_squad_dataset(tokenizer, sample), batched=True, remove_columns=dataset["train"].column_names)
     return dataset, encoded_dataset
-
-
-# Modified from RobertaForTokenClassification example notebook from Hugging Face
-# Link: https://huggingface.co/docs/transformers/en/model_doc/roberta#roberta
-def tokenize_and_align_labels(tokenizer, examples):
-    tokenized_inputs = tokenizer(examples["tokens"], truncation=True, is_split_into_words=True)
-
-    labels = []
-    for i, label in enumerate(examples["ner_tags"]):
-        word_ids = tokenized_inputs.word_ids(batch_index=i)
-        previous_word_idx = None
-        label_ids = []
-        for word_idx in word_ids:
-            # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-            # ignored in the loss function.
-            if word_idx is None:
-                label_ids.append(-100)
-            # We set the label for the first token of each word.
-            elif word_idx != previous_word_idx:
-                label_ids.append(label[word_idx])
-            # For the other tokens in a word, we set the label to either the current label or -100, depending on
-            # the label_all_tokens flag.
-            else:
-                label_ids.append(label[word_idx])
-            previous_word_idx = word_idx
-
-        labels.append(label_ids)
-
-    tokenized_inputs["labels"] = labels
-    return tokenized_inputs
-
-
-# Modified from RobertaForQuestionAnswering example notebook from Hugging Face
-# Link: https://huggingface.co/docs/transformers/en/model_doc/roberta#roberta
-def preprocess_squad_dataset(tokenizer, examples, max_length = 384, doc_stride = 128):
+  
+  # Modified from RobertaForQuestionAnswering example notebook from Hugging Face
+  # Link: https://huggingface.co/docs/transformers/en/model_doc/roberta#roberta
+  def preprocess_squad_dataset(self, tokenizer, examples, max_length = 384, doc_stride = 128):
     # Some of the questions have lots of whitespace on the left, which is not useful and will make the
     # truncation of the context fail (the tokenized question will take a lots of space). So we remove that
     # left whitespace
