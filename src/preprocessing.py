@@ -55,7 +55,7 @@ def tokenize_and_align_labels(tokenizer, examples):
     return tokenized_inputs
 
 
-# Modified from RobertaForQuestionAnswering  example notebook from Hugging Face
+# Modified from RobertaForQuestionAnswering example notebook from Hugging Face
 # Link: https://huggingface.co/docs/transformers/en/model_doc/roberta#roberta
 def preprocess_squad_dataset(tokenizer, examples, max_length = 384, doc_stride = 128):
     # Some of the questions have lots of whitespace on the left, which is not useful and will make the
