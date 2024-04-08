@@ -31,9 +31,9 @@ class MNLITask:
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
 
-    precision_score = self.precision.compute(references=labels, predictions=predictions)
-    recall_score = self.recall.compute(references=labels, predictions=predictions)
-    f1_score = self.f1.compute(references=labels, predictions=predictions)
+    precision_score = self.precision.compute(references=labels, predictions=predictions, average="weighted")
+    recall_score = self.recall.compute(references=labels, predictions=predictions, average="weighted")
+    f1_score = self.f1.compute(references=labels, predictions=predictions, average="weighted")
     accuracy_score = self.accuracy.compute(references=labels, predictions=predictions)
 
     return {
