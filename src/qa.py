@@ -197,7 +197,7 @@ class SQuADTask:
             offset_mapping = features[feature_index]["offset_mapping"]
 
             # Update minimum null prediction.
-            cls_index = features[feature_index]["input_ids"].index(tokenizer.cls_token_id)
+            cls_index = features[feature_index]["input_ids"].index(self.tokenizer.cls_token_id)
             feature_null_score = start_logits[cls_index] + end_logits[cls_index]
             if min_null_score is None or min_null_score < feature_null_score:
                 min_null_score = feature_null_score
