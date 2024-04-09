@@ -17,10 +17,10 @@ class SQuADTask:
     self.metric = evaluate.load("squad")
 
     # Specific to QA, used for compute_metrics
-    self.validation_features = self.datasets["validation"].map(
+    self.validation_features = self.dataset["validation"].map(
         self.prepare_validation_features,
         batched=True,
-        remove_columns=self.datasets["validation"].column_names
+        remove_columns=self.dataset["validation"].column_names
     )
   
   def get_squad_dataset(self, tokenizer):
@@ -30,9 +30,9 @@ class SQuADTask:
   
   def compute_metrics(self, eval_preds):
     predictions, _ = eval_preds
-    final_predictions = self.postprocess_qa_predictions(self.datasets["validation"], self.validation_features, predictions)
+    final_predictions = self.postprocess_qa_predictions(self.dataset["validation"], self.validation_features, predictions)
     formatted_predictions = [{"id": k, "prediction_text": v} for k, v in final_predictions.items()]
-    references = [{"id": ex["id"], "answers": ex["answers"]} for ex in self.datasets["validation"]]
+    references = [{"id": ex["id"], "answers": ex["answers"]} for ex in self.dataset["validation"]]
     return self.metric.compute(predictions=formatted_predictions, references=references)
   
   # Copied from RobertaForQuestionAnswering example notebook from Hugging Face
@@ -111,8 +111,6 @@ class SQuADTask:
                 while offsets[token_end_index][1] >= end_char:
                     token_end_index -= 1
                 tokenized_examples["end_positions"].append(token_end_index + 1)
-
-    tokenized_examples["answers"] = examples["answers"]
 
     return tokenized_examples
 
