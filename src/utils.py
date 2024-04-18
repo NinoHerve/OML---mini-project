@@ -149,10 +149,10 @@ def make_lr_schedulers(optimizer: torch.optim.Optimizer, lr_schdulers_dict: dict
 # ---------------------- metrics -------------------------
 
 def get_metrics(num_classes, device):
-    accuracy = Accuracy(task="multiclass", num_classes=num_classes).to(device)
-    precision = Precision(task="multiclass", num_classes=num_classes).to(device)
-    recall = Recall(task="multiclass", num_classes=num_classes).to(device)
-    f1 = F1Score(task="multiclass", num_classes=num_classes).to(device)
+    accuracy = Accuracy(task="multiclass", num_classes=num_classes, average="macro").to(device)
+    precision = Precision(task="multiclass", num_classes=num_classes, average="macro").to(device)
+    recall = Recall(task="multiclass", num_classes=num_classes, average="macro").to(device)
+    f1 = F1Score(task="multiclass", num_classes=num_classes, average="macro").to(device)
     return {
         "accuracy": accuracy,
         "precision": precision,
@@ -179,9 +179,6 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
     # data loader
     train_loader = torch.utils.data.DataLoader(dataset["train"], batch_size, shuffle=True) 
     eval_loader = torch.utils.data.DataLoader(dataset["test"], batch_size, shuffle=True) 
-
-    # scheduler
-    scheduler_name, scheduler = scheduler
     
     # tensorboard
     tb_writer = SummaryWriter(tensorboard_path)
@@ -194,7 +191,6 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
 
     # storage
     losses = []
-    lr_history = []
     
     # Training loop
     model.to(device)
