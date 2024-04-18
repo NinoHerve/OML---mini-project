@@ -66,6 +66,31 @@ def retrieve_model(model_name):
         raise ValueError(f"Model '{model_name}' not implemented.")
     return model 
 
+def retrieve_training_params(model, dataset_name, file="parameters.yml"):
+    """
+    Make torch objects from .yml parameter file.
+    """
+    params = retrieve_parameters(file)
+
+    # Optimizer
+    opt_type = params["training"]["optimizer"]
+    opt_kwargs = params[dataset_name][opt_type]
+    optimizer = make_optimizer(opt_type, model, **opt_kwargs)
+
+    # Learning rate scheduler
+    lr_schdulers_dict = params["training"]["learning_rate_scheduler"]
+    lr_schedulers = make_lr_schedulers(optimizer, lr_schdulers_dict)
+
+    # Loss function
+    loss_type = params[dataset_name]["loss"]
+    loss = make_loss(loss_type)
+
+    # Training parameters
+    n_epochs = params["training"]["n_epochs"]
+    batch_size = params["training"]["batch_size"]
+
+    return optimizer, lr_schedulers, loss, n_epochs, batch_size
+
 
 # ----------------------------- make functions -------------------------------------
 
@@ -114,72 +139,6 @@ def make_lr_schedulers(optimizer: torch.optim.Optimizer, lr_schdulers_dict: dict
         scheduler_kwargs = lr_scheduler[scheduler_type]
         scheduler_kwargs = {k: eval(v) if "lambda" in k else v for k, v in scheduler_kwargs.items()}
         scheduler = make_lr_scheduler(optimizer, scheduler_type, scheduler_kwargs)
-        lr_schedulers.append(scheduler)
+        lr_schedulers.append((scheduler_type, scheduler))
     return lr_schedulers
 
-
-def retrieve_training_params(model, dataset_name, file="parameters.yml"):
-    """
-    Make torch objects from .yml parameter file.
-    """
-    params = retrieve_parameters(file)
-
-    # Optimizer
-    opt_type = params["training"]["optimizer"]
-    opt_kwargs = params[dataset_name][opt_type]
-    optimizer = make_optimizer(opt_type, model, **opt_kwargs)
-
-    # Learning rate scheduler
-    lr_schdulers_dict = params["training"]["learning_rate_scheduler"]
-    lr_schedulers = make_lr_schedulers(optimizer, lr_schdulers_dict)
-
-    # Loss function
-    loss_type = params[dataset_name]["loss"]
-    loss = make_loss(loss_type)
-
-    # Training parameters
-    n_epochs = params["training"]["n_epochs"]
-    batch_size = params["training"]["batch_size"]
-
-    return optimizer, lr_schedulers, loss, n_epochs, batch_size
-
-
-# ----------------------------- train function -------------------------------------
-
-def train_batch_step(X_batch, y_batch, model, optimizer, loss_fn):
-    """
-    Train one iteration.
-
-    Parameters:
-    ----------
-    X_batch: pytorch.Tensor
-        Batch of data.
-
-    y_batch: pytorch.Tensor
-        Labels of data.
-
-    model: pytorch.Model
-        Model.
-
-    optimizer: pytorch.Optimizer
-        Optimizer.
-
-    loss_fn: pytorch.Functional 
-        Loss function. 
-
-    Returns:
-    -------
-    loss: float
-        Loss.
-    """
-    model.train()
-    y_pred = model(X_batch)
-    loss = loss_fn(y_pred, y_batch)
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    return loss.item()
-
-def eval():
-    pass
