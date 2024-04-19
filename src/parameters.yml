@@ -1,7 +1,7 @@
 ---
 training:
   n_epochs: !!int 1             # number of epochs
-  batch_size: !!int 32         # batch size
+  batch_size: !!int 5000         # batch size
   optimizer: !!str "RMSprop"    # optimizer
   learning_rate_scheduler:      # learning rate schedulers
     - FixLR:

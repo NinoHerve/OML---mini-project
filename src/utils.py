@@ -212,7 +212,7 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
             
             if iter % train_log == 0:
                 # print("train log metrics")
-                tb_writer.add_scalar(f"{metric_tr_path}/loss", loss, iter)
+                tb_writer.add_scalar(f"{metric_tr_path}/loss", loss.item(), iter)
                 _, y_pred = torch.max(output, 1)
                 compute_metrics(metric_tr_path, metrics, y_pred, y_tr_batch, tb_writer, iter)
 
@@ -238,8 +238,8 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
                     all_predictions = torch.cat(all_predictions, dim=0)
                     all_targets = torch.cat(all_targets, dim=0)
 
-                    loss = loss_fn(all_outputs, all_targets).item()
-                    tb_writer.add_scalar(f"{metric_te_path}/loss", loss, iter)
+                    loss = loss_fn(all_outputs, all_targets)
+                    tb_writer.add_scalar(f"{metric_te_path}/loss", loss.item(), iter)
                     compute_metrics(metric_te_path, metrics, all_predictions, all_targets, tb_writer, iter)
 
             #update scheduler
