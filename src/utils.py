@@ -65,6 +65,7 @@ def retrieve_dataset(dataset_name):
 def retrieve_model(model_name):
     if model_name.lower() == "mobilenetv3small":
         model = torchvision.models.mobilenet_v3_small(weights=None)
+        # model = torchvision.models.mobilenet_v3_small(weights="DEFAULT")
     else:
         raise ValueError(f"Model '{model_name}' not implemented.")
     return model 
@@ -122,8 +123,6 @@ def make_lr_scheduler(optimizer: torch.optim.Optimizer, lr_type: str, kwargs) ->
         "FixLR": schedulers.LambdaLR,
         "LinearLR": schedulers.LinearLR,
         "OneCycleLR": schedulers.OneCycleLR,
-        # "ExponentialLR": schedulers.ExponentialLR,
-        # "ReduceLROnPlateau": schedulers.ReduceLROnPlateau,
         "CyclicLR": schedulers.CyclicLR,
         # Add more schedulers here as needed
     }
@@ -195,6 +194,7 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
     # Training loop
     model.to(device)
     for epoch in range(n_epochs):
+        print(f"Epoch {epoch+1}")
         for tr_iter, (X_tr_batch, y_tr_batch) in enumerate(train_loader):
             X_tr_batch, y_tr_batch = X_tr_batch.to(device), y_tr_batch.to(device)
 
