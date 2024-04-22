@@ -3,6 +3,13 @@ training:
   n_epochs: !!int 8             # number of epochs
   batch_size: !!int 128         # batch size
   optimizer: !!str "RMSprop"    # optimizer
+
+CIFAR10:
+  loss: !!str "CrossEntropy"  # loss
+  RMSprop:
+    lr: !!float 3e-4
+    momentum: !!float 0.9
+    weight_decay: !!float 1e-5
   learning_rate_scheduler:      # learning rate schedulers
     - FixLR:
         lr_lambda: !!str "lambda _: 1.0"
@@ -27,11 +34,31 @@ training:
         mode: !!str "triangular2"
 
 
-CIFAR10:
+FashionMNIST:
   loss: !!str "CrossEntropy"  # loss
-  SGD:
-    lr: !!float 3e-4          # learning rate
   RMSprop:
     lr: !!float 3e-4
     momentum: !!float 0.9
     weight_decay: !!float 1e-5
+  learning_rate_scheduler:      # learning rate schedulers
+    - FixLR:
+        lr_lambda: !!str "lambda _: 1.0"
+    - LinearLR:
+        start_factor: !!float 1.0      
+        end_factor: !!float 0.1
+        total_iters: !!int 100 
+    - OneCycleLR:
+        max_lr: !!float 3e-4
+        pct_start: !!float 0.05
+        steps_per_epoch: !!int 10
+        epochs: !!int 10
+    - CyclicLR:
+        base_lr: !!float 5e-5
+        max_lr: !!float 3e-4
+        step_size_up: !!int 5
+        mode: !!str "triangular"
+    - CyclicLR:
+        base_lr: !!float 5e-5
+        max_lr: !!float 3e-4
+        step_size_up: !!int 5
+        mode: !!str "triangular2"

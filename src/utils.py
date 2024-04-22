@@ -15,6 +15,10 @@ def retrieve_setup(model_name, dataset_name):
     model = retrieve_model(model_name)
     training_data, test_data = retrieve_dataset(dataset_name)
 
+    # change number of input channels
+    num_channels = training_data[0][0].shape[0]
+    model.features[0][0] = torch.nn.Conv2d(num_channels, 16, kernel_size=3, stride=2, padding=1, bias=False)
+
     # change last layer of model
     in_features = model.classifier[-1].in_features
     out_features = len(training_data.classes)           # Does this attribute exist for any dataset?
@@ -39,8 +43,8 @@ def retrieve_dataset(dataset_name):
         download=True,                  # downloads data if data not in given directory
     )
 
+    # CIFAR10 dataset
     if dataset_name == "CIFAR10":
-
         train_transforms = torchvision.transforms.Compose([
             torchvision.transforms.RandomCrop(32, padding=4),
             torchvision.transforms.RandomHorizontalFlip(),
@@ -55,7 +59,22 @@ def retrieve_dataset(dataset_name):
 
         training_data = torchvision.datasets.CIFAR10(train=True, transform=train_transforms, **dataset_kwargs)        
         test_data = torchvision.datasets.CIFAR10(train=False, transform=test_transforms, **dataset_kwargs)
+    # FashionMNIST dataset
+    elif dataset_name == "FashionMNIST":
+        train_transforms = torchvision.transforms.Compose([
+            torchvision.transforms.RandomCrop(28, padding=4),
+            torchvision.transforms.RandomHorizontalFlip(),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((0.5,), (0.5,))
+        ])
 
+        test_transforms = torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((0.5,), (0.5,))
+        ])
+
+        training_data = torchvision.datasets.FashionMNIST(train=True, transform=train_transforms, **dataset_kwargs)        
+        test_data = torchvision.datasets.FashionMNIST(train=False, transform=train_transforms, **dataset_kwargs)
     else:
         raise ValueError(f"Dataset '{dataset_name}' not implemented.")
     
@@ -82,7 +101,7 @@ def retrieve_training_params(model, dataset_name, file="parameters.yml"):
     optimizer = make_optimizer(opt_type, model, **opt_kwargs)
 
     # Learning rate scheduler
-    lr_schdulers_dict = params["training"]["learning_rate_scheduler"]
+    lr_schdulers_dict = params[dataset_name]["learning_rate_scheduler"]
     lr_schedulers = make_lr_schedulers(optimizer, lr_schdulers_dict)
 
     # Loss function
