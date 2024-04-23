@@ -1,5 +1,6 @@
 import yaml
 import numpy as np
+import pandas as pd
 import torch
 import torchvision
 import torch.optim.lr_scheduler as schedulers
@@ -184,7 +185,7 @@ def compute_metrics(metric_path, metrics, y_pred, y_true, tb_writer, n_iter):
         score = metric(y_pred, y_true)
         # print(f"{metric_name}: {score}")
         tb_writer.add_scalar(f"{metric_path}/{metric_name}", score, n_iter)
-        scores[metric_name] = score
+        scores[metric_name] = score.item()
     return scores
 
 
@@ -192,14 +193,14 @@ def compute_metrics(metric_path, metrics, y_pred, y_true, tb_writer, n_iter):
 
 def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, batch_size=32,
                 train_strategy=("", 1), test_strategy=("", 1), scheduler_strategy="iter", 
-                tensorboard_path="./tensorboard", device=torch.device("cpu")):
+                file_name="", device=torch.device("cpu")):
 
     # data loader
     train_loader = torch.utils.data.DataLoader(dataset["train"], batch_size, shuffle=True) 
     eval_loader = torch.utils.data.DataLoader(dataset["test"], batch_size, shuffle=True) 
     
     # tensorboard
-    tb_writer = SummaryWriter(tensorboard_path)
+    tb_writer = SummaryWriter(f"./tensorboard/{file_name}")
     num_classes = len(dataset["train"].classes)
     metrics = get_metrics(num_classes, device)
     metric_tr_path = f"{train_loader.dataset.root.split('/')[-1]}/train"
@@ -208,7 +209,7 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
     eval_log = test_strategy[1] if test_strategy[0] == "iter" else test_strategy[1] * len(train_loader) + (train_loader.batch_size-1)
 
     # storage
-    losses = []
+    metrics_hist = []
     
     # Training loop
     model.to(device)
@@ -223,8 +224,7 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
             loss = loss_fn(output, y_tr_batch)
             loss.backward()
             optimizer.step()
-            losses.append(loss.item()) 
-
+            
             iter = epoch * len(train_loader) + tr_iter
 
             tb_writer.add_scalar(f"{metric_tr_path}/lr", scheduler.get_last_lr()[0], iter)
@@ -233,7 +233,8 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
                 # print("train log metrics")
                 tb_writer.add_scalar(f"{metric_tr_path}/loss", loss.item(), iter)
                 _, y_pred = torch.max(output, 1)
-                compute_metrics(metric_tr_path, metrics, y_pred, y_tr_batch, tb_writer, iter)
+                tr_metric = compute_metrics(metric_tr_path, metrics, y_pred, y_tr_batch, tb_writer, iter)
+                metrics_hist.append({**tr_metric, "loss": loss.item(), "lr": scheduler.get_last_lr()[0], "iter": iter, "source": "train"})
 
             
             if iter % eval_log == 0:
@@ -259,7 +260,9 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
 
                     loss = loss_fn(all_outputs, all_targets)
                     tb_writer.add_scalar(f"{metric_te_path}/loss", loss.item(), iter)
-                    compute_metrics(metric_te_path, metrics, all_predictions, all_targets, tb_writer, iter)
+
+                    te_metric = compute_metrics(metric_te_path, metrics, all_predictions, all_targets, tb_writer, iter)
+                    metrics_hist.append({**te_metric, "loss": loss.item(), "lr": scheduler.get_last_lr()[0], "iter": iter, "source": "test"})
 
             #update scheduler
             if scheduler_strategy == "iter":
@@ -268,8 +271,9 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
         if scheduler_strategy == "epoch":
             scheduler.step()
 
-    losses = np.array(losses)
+    metrics_hist = np.array(metrics_hist)
+    pd.DataFrame(metrics_hist.tolist()).to_csv(f"./metrics/{file_name}.csv")
 
     tb_writer.flush()
     tb_writer.close()
-    return model, losses
+    return model, metrics_hist
