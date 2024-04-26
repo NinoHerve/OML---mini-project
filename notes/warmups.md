@@ -13,7 +13,7 @@ October 2018
 Compare warmup effects using VGG-16 architecture and CIFAR-10 dataset.
 - 3 training sessions: (1) large batch + no warmup, (2) large batch + warmup, (3) small batch + no warmup.
 - Large batch = 5000 and small batch = 100.
-- Warmup using linear increase from 0 to 2.5 during <span style="color:yellow">200 iterations</span>. (if dataset=50 000 samples like use than 200 iterations are 20 epochs)
+- Warmup using linear increase from 0 to 2.5 during <span style="color:yellow">200 iterations</span>. (if dataset=50 000 samples like us than 200 iterations are 20 epochs)
 - Learning rate for small batch is 0.05 and for large it's 2.5 (scaling rule)
 
 They use Canonical Correlation Analysis (CCA) to compare the weights of the model at
