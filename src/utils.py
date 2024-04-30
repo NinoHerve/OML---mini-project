@@ -90,7 +90,7 @@ def retrieve_model(model_name):
         raise ValueError(f"Model '{model_name}' not implemented.")
     return model 
 
-def retrieve_training_params(model, dataset_name, file="parameters.yml"):
+def retrieve_training_params(model, dataset_name, scheduler_name, file="parameters.yml"):
     """
     Make torch objects from .yml parameter file.
     """
@@ -102,8 +102,9 @@ def retrieve_training_params(model, dataset_name, file="parameters.yml"):
     optimizer = make_optimizer(opt_type, model, **opt_kwargs)
 
     # Learning rate scheduler
-    lr_schdulers_dict = params[dataset_name]["learning_rate_scheduler"]
-    lr_schedulers = make_lr_schedulers(optimizer, lr_schdulers_dict)
+    lr_schduler_dict = params[dataset_name]["learning_rate_scheduler"][scheduler_name]
+    lr_scheduler_kwargs = {k: eval(v) if "lambda" in k else v for k, v in lr_schduler_dict.items()}
+    lr_scheduler = make_lr_scheduler(optimizer, scheduler_name, lr_scheduler_kwargs)
 
     # Loss function
     loss_type = params[dataset_name]["loss"]
@@ -113,7 +114,7 @@ def retrieve_training_params(model, dataset_name, file="parameters.yml"):
     n_epochs = params["training"]["n_epochs"]
     batch_size = params["training"]["batch_size"]
 
-    return optimizer, lr_schedulers, loss, n_epochs, batch_size
+    return optimizer, lr_scheduler, loss, n_epochs, batch_size
 
 
 # ----------------------------- make functions -------------------------------------
@@ -144,6 +145,7 @@ def make_lr_scheduler(optimizer: torch.optim.Optimizer, lr_type: str, kwargs) ->
         "LinearLR": schedulers.LinearLR,
         "OneCycleLR": schedulers.OneCycleLR,
         "CyclicLR": schedulers.CyclicLR,
+        "CyclicLR2": schedulers.CyclicLR,
         # Add more schedulers here as needed
     }
 
@@ -152,17 +154,6 @@ def make_lr_scheduler(optimizer: torch.optim.Optimizer, lr_type: str, kwargs) ->
 
     scheduler_cls = supported_schedulers[lr_type]
     return scheduler_cls(optimizer, **kwargs)
-
-
-def make_lr_schedulers(optimizer: torch.optim.Optimizer, lr_schdulers_dict: dict):
-    lr_schedulers = []
-    for lr_scheduler in lr_schdulers_dict:
-        scheduler_type = list(lr_scheduler.keys())[0]
-        scheduler_kwargs = lr_scheduler[scheduler_type]
-        scheduler_kwargs = {k: eval(v) if "lambda" in k else v for k, v in scheduler_kwargs.items()}
-        scheduler = make_lr_scheduler(optimizer, scheduler_type, scheduler_kwargs)
-        lr_schedulers.append((scheduler_type, scheduler))
-    return lr_schedulers
 
 
 # ---------------------- metrics -------------------------
@@ -205,8 +196,8 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
     metrics = get_metrics(num_classes, device)
     metric_tr_path = f"{train_loader.dataset.root.split('/')[-1]}/train"
     metric_te_path = f"{eval_loader.dataset.root.split('/')[-1]}/test"
-    train_log = train_strategy[1] if train_strategy[0] == "iter" else train_strategy[1] * len(train_loader) + (train_loader.batch_size-1)
-    eval_log = test_strategy[1] if test_strategy[0] == "iter" else test_strategy[1] * len(train_loader) + (train_loader.batch_size-1)
+    train_log = train_strategy[1] if train_strategy[0] == "iter" else train_strategy[1] * len(train_loader) // train_loader.batch_size
+    eval_log = test_strategy[1] if test_strategy[0] == "iter" else test_strategy[1] * len(train_loader) // train_loader.batch_size
 
     # storage
     metrics_hist = []
@@ -228,6 +219,7 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
             iter = epoch * len(train_loader) + tr_iter
 
             tb_writer.add_scalar(f"{metric_tr_path}/lr", scheduler.get_last_lr()[0], iter)
+            # optimizer.param_groups[0]["lr"]
             
             if iter % train_log == 0:
                 # print("train log metrics")
