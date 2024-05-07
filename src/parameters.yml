@@ -1,13 +1,13 @@
 ---
 training:
-  n_epochs: !!int 50             # number of epochs
-  batch_size: !!int 512         # batch size
+  n_epochs: !!int 150             # number of epochs
+  batch_size: !!int 4096         # batch size
   optimizer: !!str "RMSprop"    # optimizer
 
 CIFAR10:
   loss: !!str "CrossEntropy"  # loss
   RMSprop:
-    lr: !!float 0.0006
+    lr: !!float 0.00095
     momentum: !!float 0.9
     weight_decay: !!float 1e-5
   learning_rate_scheduler:      # learning rate schedulers
@@ -18,10 +18,9 @@ CIFAR10:
       end_factor: !!float 0.25
       total_iters: !!int 4882 
     OneCycleLR:
-      max_lr: !!float 0.0006
-      pct_start: !!float 0.04
-      steps_per_epoch: !!int 97
-      epochs: !!int 50
+      max_lr: !!float 0.00095
+      pct_start: !!float 0.10
+      total_steps: !!int 1831
     CyclicLR:
       base_lr: !!float 5e-5
       max_lr: !!float 3e-4
@@ -50,8 +49,7 @@ FashionMNIST:
     OneCycleLR:
       max_lr: !!float 3e-4
       pct_start: !!float 0.05
-      steps_per_epoch: !!int 10
-      epochs: !!int 10
+      total_steps: !!int 1831
     CyclicLR:
       base_lr: !!float 5e-5
       max_lr: !!float 3e-4
