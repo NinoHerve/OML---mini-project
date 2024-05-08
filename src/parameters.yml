@@ -7,7 +7,7 @@ training:
 CIFAR10:
   loss: !!str "CrossEntropy"  # loss
   RMSprop:
-    lr: !!float 0.00095
+    lr: !!float 9.5e-4
     momentum: !!float 0.9
     weight_decay: !!float 1e-5
   learning_rate_scheduler:      # learning rate schedulers
@@ -16,19 +16,19 @@ CIFAR10:
     LinearLR:
       start_factor: !!float 1.0
       end_factor: !!float 0.25
-      total_iters: !!int 4882 
+      total_iters: !!int 1950 
     OneCycleLR:
-      max_lr: !!float 0.00095
-      pct_start: !!float 0.10
-      total_steps: !!int 1831
+      max_lr: !!float 9.5e-4
+      pct_start: !!float 0.13
+      total_steps: !!int 1950
     CyclicLR:
-      base_lr: !!float 5e-5
-      max_lr: !!float 3e-4
-      step_size_up: !!int 5
+      base_lr: !!float 2.375e-4
+      max_lr: !!float 9.5e-4
+      step_size_up: !!int 65
       mode: !!str "triangular"
     CyclicLR2:
-      base_lr: !!float 5e-5
-      max_lr: !!float 3e-4
+      base_lr: !!float 2.375e-4
+      max_lr: !!float 9.5e-4
       step_size_up: !!int 5
       mode: !!str "triangular2"
 
