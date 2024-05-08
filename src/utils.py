@@ -196,8 +196,9 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
     metrics = get_metrics(num_classes, device)
     metric_tr_path = f"{train_loader.dataset.root.split('/')[-1]}/train"
     metric_te_path = f"{eval_loader.dataset.root.split('/')[-1]}/test"
-    train_log = train_strategy[1] if train_strategy[0] == "iter" else train_strategy[1] * len(train_loader) // train_loader.batch_size
-    eval_log = test_strategy[1] if test_strategy[0] == "iter" else test_strategy[1] * len(train_loader) // train_loader.batch_size
+    train_log = train_strategy[1] if train_strategy[0] == "iter" else train_strategy[1] * len(train_loader) 
+    eval_log = test_strategy[1] if test_strategy[0] == "iter" else test_strategy[1] * len(train_loader)
+    print(eval_log)
 
     # storage
     metrics_hist = []
@@ -230,7 +231,6 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
 
             
             if iter % eval_log == 0:
-                # print("test log metrics")
                 model.eval()
                 with torch.no_grad():
                     all_outputs = []
