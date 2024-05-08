@@ -29,7 +29,7 @@ CIFAR10:
     CyclicLR2:
       base_lr: !!float 2.375e-4
       max_lr: !!float 9.5e-4
-      step_size_up: !!int 5
+      step_size_up: !!int 65
       mode: !!str "triangular2"
 
 
