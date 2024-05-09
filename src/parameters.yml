@@ -15,19 +15,19 @@ CIFAR10:
       lr_lambda: !!str "lambda _: 1.0"
     LinearLR:
       start_factor: !!float 1.0
-      end_factor: !!float 0.25
-      total_iters: !!int 1950 
+      end_factor: !!float 0.000004
+      total_iters: !!int 1950
     OneCycleLR:
       max_lr: !!float 9.5e-4
       pct_start: !!float 0.13
       total_steps: !!int 1950
     CyclicLR:
-      base_lr: !!float 2.375e-4
+      base_lr: !!float 3.8e-09
       max_lr: !!float 9.5e-4
       step_size_up: !!int 65
       mode: !!str "triangular"
     CyclicLR2:
-      base_lr: !!float 2.375e-4
+      base_lr: !!float 3.8e-09
       max_lr: !!float 9.5e-4
       step_size_up: !!int 65
       mode: !!str "triangular2"
