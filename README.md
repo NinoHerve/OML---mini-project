@@ -1,6 +1,7 @@
 # Learning Rate Scheduler Project
 This project aims at exploring the impact of learning rate schedulers when training models. Specifically, we look at training from scratch an image NN architecture (MobileNetV3) ...
 
+
 ## Tasks
 - Model: [MobileNetV3](https://arxiv.org/pdf/1905.02244.pdf)
 - Tasks (known image multiclass classification):
@@ -12,27 +13,26 @@ This project aims at exploring the impact of learning rate schedulers when train
 
 ## Files (structure)
 Training:
-- ``playground.ipynb``: 
+- ``cifar_playground.ipynb``: Training notebook for CIFAR-10 dataset.
+- ``fashion_playground.ipynb``: Training notebook for FashionMNIST dataset.
 
 Training parameters:
 - ``parameters.yml``: YAML file with training parameters (e.g. ``n_epochs``, ``batch_size``, ``optimizer``, ``learning_rate_scheduler``, etc).
 
 Exploration:
-- ``lr_range_test.ipynb``: performing the Learning Rate Range Test.
+- ``lr_range_test.ipynb``: Performing the Learning Rate Range Test as explained [here](https://arxiv.org/pdf/1506.01186)
+- ``lr_range_analysis.ipynb``: Visualizing the results of the Learning Rate range test.
 - ``lr_schedulers.ipynb``: visualizing different learning rate scheduling techniques.
 
-
-## Learning Rate Range Tests
-When performing the [“LR range test”](https://arxiv.org/pdf/1506.01186.pdf) (i.e., running the model for several epochs while letting the learning rate increase linearly between low and high LR values), we identify reasonable minimum and maximum boundary values estimate for the learning rate (detailed in ``lr_range_test.ipynb``).
+Results:
+- ``tensorboard``: Directory containing folders for each set of experiments (tensorboard files).
+- ``metrics``: Directory containing folders for each set of experiments (CSV files).
 
 
 ## Tensorboard
-
-In this directory, the tensorboard logs should be stored when you're training/evaluating the models. Training and evaluation functions already include the code to push logs to tensorboard.
+Tensorboard logs are stored in ``./src/tensorboard/`` store the training/evaluation metrics, more info [here](https://pytorch.org/tutorials/intermediate/tensorboard_tutorial.html).
 
 We suggest you inspect the tensorboard logs running the tensorboard interface using the following command:
 ```sh
-tensorboard --logdir=./tensorboard
+tensorboard --logdir=./tensorboard/{folder_of_experiment}
 ```
-
-_You can find more information on Tensorboard with pytorch [here](https://pytorch.org/tutorials/intermediate/tensorboard_tutorial.html)._

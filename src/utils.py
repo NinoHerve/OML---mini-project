@@ -10,8 +10,10 @@ from torchmetrics import Accuracy, Precision, Recall, F1Score
 
 
 # ------------------------------ retrieve functions -------------------------------
-def retrieve_setup(model_name, dataset_name):
-
+def retrieve_setup(model_name: str, dataset_name: str):
+    """
+    Retrieve model and dataset.
+    """
     # retrieve model & data
     model = retrieve_model(model_name)
     training_data, test_data = retrieve_dataset(dataset_name)
@@ -31,14 +33,20 @@ def retrieve_setup(model_name, dataset_name):
     return model, dataset
 
 
-def retrieve_parameters(fname):
+def retrieve_parameters(fname: str) -> dict:
+    """
+    Retrieve parameters from parameters.yml file.
+    """
     with open(fname, "r") as file:
         data = yaml.safe_load(file)
     return data
 
 
-def retrieve_dataset(dataset_name):
-
+def retrieve_dataset(dataset_name: str):
+    """
+    Retrieve dataset from torchvision.
+    Currently supports CIFAR10 and FashionMNIST.
+    """
     dataset_kwargs = dict(
         root=f"data/{dataset_name}",    # directory where dataset will be loaded
         download=True,                  # downloads data if data not in given directory
@@ -50,7 +58,7 @@ def retrieve_dataset(dataset_name):
             torchvision.transforms.RandomCrop(32, padding=4),
             torchvision.transforms.RandomHorizontalFlip(),
             torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))     # very ugly hard coding
+            torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))
         ])
 
         test_transforms = torchvision.transforms.Compose([
@@ -60,6 +68,7 @@ def retrieve_dataset(dataset_name):
 
         training_data = torchvision.datasets.CIFAR10(train=True, transform=train_transforms, **dataset_kwargs)        
         test_data = torchvision.datasets.CIFAR10(train=False, transform=test_transforms, **dataset_kwargs)
+    
     # FashionMNIST dataset
     elif dataset_name == "FashionMNIST":
         train_transforms = torchvision.transforms.Compose([
@@ -82,7 +91,11 @@ def retrieve_dataset(dataset_name):
     return training_data, test_data
 
 
-def retrieve_model(model_name):
+def retrieve_model(model_name: str) -> torch.nn.Module:
+    """
+    Retrieve model from torchvision.
+    Currently supports MobileNetV3 (small).
+    """
     if model_name.lower() == "mobilenetv3small":
         model = torchvision.models.mobilenet_v3_small(weights=None)
         # model = torchvision.models.mobilenet_v3_small(weights="DEFAULT")
@@ -90,9 +103,9 @@ def retrieve_model(model_name):
         raise ValueError(f"Model '{model_name}' not implemented.")
     return model 
 
-def retrieve_training_params(model, dataset_name, scheduler_name, file="parameters.yml"):
+def retrieve_training_params(model: torch.nn.Module, dataset_name: str, scheduler_name: str, file: str = "parameters.yml"):
     """
-    Make torch objects from .yml parameter file.
+    Retrieve optimization parameters (e.g. optimizer, loss, etc.) from parameters.yml file.
     """
     params = retrieve_parameters(file)
 
@@ -119,7 +132,11 @@ def retrieve_training_params(model, dataset_name, scheduler_name, file="paramete
 
 # ----------------------------- make functions -------------------------------------
 
-def make_loss(loss_type):
+def make_loss(loss_type: str) -> torch.nn.Module:
+    """
+    Make loss function (supports Binary Cross Entropy (BCE) and Cross Entropy).
+    CIFAR10 and FashionMNIST are multiclass classification problems.
+    """
     if loss_type.lower() == "bce":
         loss = torch.nn.BCELoss()
     elif loss_type.lower() == "crossentropy":
@@ -129,7 +146,11 @@ def make_loss(loss_type):
     return loss
     
 
-def make_optimizer(opt_type, model, **opt_kwargs):
+def make_optimizer(opt_type: str, model: torch.nn.Module, **opt_kwargs) -> torch.optim.Optimizer:
+    """
+    Make optimizer (supports RMSprop and SGD).
+    MobileNetV3 (small) model uses RMSprop in the original paper.
+    """
     if opt_type.lower() == "sgd":
         optimizer = torch.optim.SGD(model.parameters(), **opt_kwargs)
     elif opt_type.lower() == "rmsprop":
@@ -140,13 +161,15 @@ def make_optimizer(opt_type, model, **opt_kwargs):
 
 
 def make_lr_scheduler(optimizer: torch.optim.Optimizer, lr_type: str, kwargs) -> torch.optim.lr_scheduler.LRScheduler:
+    """
+    Make learning rate scheduler (supports FixLR, LinearLR, OneCycleLR, CyclicLR).
+    """
     supported_schedulers = {
         "FixLR": schedulers.LambdaLR,
         "LinearLR": schedulers.LinearLR,
         "OneCycleLR": schedulers.OneCycleLR,
         "CyclicLR": schedulers.CyclicLR,
         "CyclicLR2": schedulers.CyclicLR,
-        # Add more schedulers here as needed
     }
 
     if lr_type not in supported_schedulers:
@@ -158,7 +181,10 @@ def make_lr_scheduler(optimizer: torch.optim.Optimizer, lr_type: str, kwargs) ->
 
 # ---------------------- metrics -------------------------
 
-def get_metrics(num_classes, device):
+def get_metrics(num_classes: int, device: torch.device) -> dict:
+    """
+    Metrics for multiclass classification.
+    """
     accuracy = Accuracy(task="multiclass", num_classes=num_classes, average="macro").to(device)
     precision = Precision(task="multiclass", num_classes=num_classes, average="macro").to(device)
     recall = Recall(task="multiclass", num_classes=num_classes, average="macro").to(device)
@@ -170,7 +196,10 @@ def get_metrics(num_classes, device):
         "f1": f1
     }
 
-def compute_metrics(metric_path, metrics, y_pred, y_true, tb_writer, n_iter):
+def compute_metrics(metric_path: str, metrics: dict, y_pred: torch.Tensor, y_true: torch.Tensor, tb_writer: SummaryWriter , n_iter: int) -> dict:
+    """
+    Compute metrics and log to tensorboard.
+    """
     scores = {}
     for metric_name, metric in metrics.items():
         score = metric(y_pred, y_true)
@@ -182,9 +211,23 @@ def compute_metrics(metric_path, metrics, y_pred, y_true, tb_writer, n_iter):
 
 # ----------------------- training ----------------------
 
-def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, batch_size=32,
-                train_strategy=("", 1), test_strategy=("", 1), scheduler_strategy="iter", 
-                file_name="", device=torch.device("cpu")):
+def training_loop(
+    model: torch.nn.Module,
+    dataset: torch.utils.data.Dataset,
+    scheduler: torch.optim.lr_scheduler.LRScheduler,
+    optimizer: torch.optim.Optimizer,
+    loss_fn: torch.nn.Module,
+    n_epochs=1, 
+    batch_size=32,
+    train_strategy=("", 1), 
+    test_strategy=("", 1), 
+    scheduler_strategy="iter", 
+    file_name="", 
+    device=torch.device("cpu")
+):
+    """
+    Training loop for model.
+    """
 
     # data loader
     train_loader = torch.utils.data.DataLoader(dataset["train"], batch_size, shuffle=True) 
@@ -198,7 +241,6 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
     metric_te_path = f"{eval_loader.dataset.root.split('/')[-1]}/test"
     train_log = train_strategy[1] if train_strategy[0] == "iter" else train_strategy[1] * len(train_loader) 
     eval_log = test_strategy[1] if test_strategy[0] == "iter" else test_strategy[1] * len(train_loader)
-    print(eval_log)
 
     # storage
     metrics_hist = []
@@ -210,6 +252,7 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
         for tr_iter, (X_tr_batch, y_tr_batch) in enumerate(train_loader):
             X_tr_batch, y_tr_batch = X_tr_batch.to(device), y_tr_batch.to(device)
 
+            # Forward + Backward pass
             model.train()
             optimizer.zero_grad()
             output = model(X_tr_batch)
@@ -219,20 +262,23 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
             
             iter = epoch * len(train_loader) + tr_iter
 
+            # Log learning rate
             tb_writer.add_scalar(f"{metric_tr_path}/lr", scheduler.get_last_lr()[0], iter)
-            # optimizer.param_groups[0]["lr"]
             
+            # Log training metrics
             if iter % train_log == 0:
                 # print("train log metrics")
                 tb_writer.add_scalar(f"{metric_tr_path}/loss", loss.item(), iter)
                 _, y_pred = torch.max(output, 1)
                 tr_metric = compute_metrics(metric_tr_path, metrics, y_pred, y_tr_batch, tb_writer, iter)
                 metrics_hist.append({**tr_metric, "loss": loss.item(), "lr": scheduler.get_last_lr()[0], "iter": iter, "source": "train"})
-
             
+            # Evaluation Loop
             if iter % eval_log == 0:
                 model.eval()
                 with torch.no_grad():
+
+                    # Compute all evaluations
                     all_outputs = []
                     all_predictions = []
                     all_targets = []
@@ -251,8 +297,9 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
                     all_targets = torch.cat(all_targets, dim=0)
 
                     loss = loss_fn(all_outputs, all_targets)
-                    tb_writer.add_scalar(f"{metric_te_path}/loss", loss.item(), iter)
 
+                    # Log evaluation metrics
+                    tb_writer.add_scalar(f"{metric_te_path}/loss", loss.item(), iter)
                     te_metric = compute_metrics(metric_te_path, metrics, all_predictions, all_targets, tb_writer, iter)
                     metrics_hist.append({**te_metric, "loss": loss.item(), "lr": scheduler.get_last_lr()[0], "iter": iter, "source": "test"})
 
@@ -263,9 +310,11 @@ def training_loop(model, dataset, scheduler, optimizer, loss_fn, n_epochs=1, bat
         if scheduler_strategy == "epoch":
             scheduler.step()
 
+    # Save metrics to csv
     metrics_hist = np.array(metrics_hist)
     pd.DataFrame(metrics_hist.tolist()).to_csv(f"./metrics/{file_name}.csv")
 
+    # Close tensorboard writer
     tb_writer.flush()
     tb_writer.close()
     return model, metrics_hist
