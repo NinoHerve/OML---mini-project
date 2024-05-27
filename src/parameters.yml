@@ -36,7 +36,7 @@ CIFAR10:
 FashionMNIST:
   loss: !!str "CrossEntropy"  # loss
   RMSprop:
-    lr: !!float 0.0009
+    lr: !!float 9.0e-4
     momentum: !!float 0.9
     weight_decay: !!float 1e-5
   learning_rate_scheduler:      # learning rate schedulers

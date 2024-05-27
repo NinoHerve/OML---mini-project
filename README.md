@@ -13,16 +13,12 @@ This project aims at exploring the impact of learning rate schedulers when train
 
 ## Files (structure)
 Training:
-- ``cifar_playground.ipynb``: Training notebook for CIFAR-10 dataset.
-- ``fashion_playground.ipynb``: Training notebook for FashionMNIST dataset.
+- ``lr_range_test.ipynb``: Performing the Learning Rate Range Test as explained [here](https://arxiv.org/pdf/1506.01186).
+- ``lr_schedulers_test.ipynb``: Training different learning rate schedulers.
+- ``lr_schedulers_visualizations.ipynb``: Visualizing different learning rate scheduling techniques.
 
 Training parameters:
 - ``parameters.yml``: YAML file with training parameters (e.g. ``n_epochs``, ``batch_size``, ``optimizer``, ``learning_rate_scheduler``, etc).
-
-Exploration:
-- ``lr_range_test.ipynb``: Performing the Learning Rate Range Test as explained [here](https://arxiv.org/pdf/1506.01186)
-- ``lr_range_analysis.ipynb``: Visualizing the results of the Learning Rate range test.
-- ``lr_schedulers.ipynb``: visualizing different learning rate scheduling techniques.
 
 Results:
 - ``tensorboard``: Directory containing folders for each set of experiments (tensorboard files).
